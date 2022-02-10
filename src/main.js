@@ -5,4 +5,9 @@ Vue.config.productionTip = false
 
 new Vue({
   render: h => h(App),
+  data: () => {
+    return {
+      title: "Tessle"
+    }
+  }
 }).$mount('#app')
