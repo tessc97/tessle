@@ -1,7 +1,7 @@
 <template>
     <div id="tessle">
-        <h1>Tessle</h1>
-        <Game />
+        <Menu />
+        <router-view></router-view>
     </div>
 </template>
 
@@ -9,7 +9,7 @@
 export default {
     name: 'Tessle',
     components: {
-      Game: () => import("./Game.vue")
+      Menu: () => import("./Menu.vue")
     }
 }
 </script>

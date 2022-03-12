@@ -1,41 +1,54 @@
 <template>
     <div id="game">
         <h3 :class="{'hidden': state !== 'won'}">Congratulations, you won! :)</h3>
+        
+        <p v-if="winMessage !== ''" :class="{'hidden': state !== 'won'}">{{ winMessage }}</p>
         <button class="success" :class="{'hidden': state !== 'won'}" @click.prevent="shareScore">Share</button>
 
         <h3 :class="{'hidden': state !== 'lost'}">You lost! :(</h3>
         <p :class="{'hidden': state !== 'lost'}">The word was {{ word }}.</p>
         
-        <button :class="{'hidden': state === 'game'}" @click.prevent="setupGame">Try again!</button>
+        <button v-if="canRetry" :class="{'hidden': state === 'game'}" @click.prevent="setupGame">Try again!</button>
 
         <LetterRow v-for="guess in guesses" :key="guess._id" :letters="guess.letters" />
         <input type="text" v-model="guess" @keyup.enter="makeGuess" :disabled="state != 'game'">
         <button class="success" @click="makeGuess" :disabled="state != 'game'">Guess</button>
         <p>{{ warning }}</p>
-        <Scores ref="scoreboard" />
     </div>
 </template>
 
 <script>
-import words from './words.js'
-import Scores from './Scores.vue'
-
 export default {
     name: "GameField",
-    data: () => {
-        return {
-            word: "",
-            wordList: words.map(word => word.toUpperCase()),
-            guesses: [],
-            state: "game",
-            guess: "",
-            warning: "",
-            guessNum: 0,
-            maxGuesses: 6
+    props: {
+        word: {
+            type: String
+        },
+        wordList: {
+            type: Array
+        },
+        canRetry: {
+            type: Boolean,
+            default: true
+        },
+        winMessage: {
+            type: String
+        },
+        includeWordSpoiler: {
+            type: Boolean,
+            default: true
         }
     },
+    data: () => ({
+        guesses: [],
+        state: "game",
+        guess: "",
+        warning: "",
+        guessNum: 0,
+        maxGuesses: 6
+    }),
     components: {
-        LetterRow: () => import("./LetterRow.vue"), Scores
+        LetterRow: () => import("./LetterRow.vue")
     },
     methods: {
         makeGuess: function() {
@@ -60,7 +73,7 @@ export default {
 
             if (word === guess) {
                 this.state = "won"
-                this.winGame()
+                this.$emit("win", {guesses: this.guessNum+1, word: this.word})
             }
             if (this.guessNum >= (this.maxGuesses - 1)) {
                 if (this.state !== "won") {
@@ -112,8 +125,7 @@ export default {
             this.guess = ""
         },
         setupGame: function() {
-            let word = this.wordList[Math.floor(Math.random()*this.wordList.length)]
-            this.word = word
+            this.$emit("reset")
             this.guesses = this.generateGrid()
             
             this.state = "game"
@@ -139,18 +151,18 @@ export default {
             }
             return grid
         },
-        winGame: function() {
-            this.$refs.scoreboard.addScore(this.guessNum+1, this.word)
-        },
         shareScore: function() {
-            let shareString = "Tessle\n"
+            let shareString = `Tessle ${this.$route.name}\n`
             for (let guess = 0; guess < this.guessNum; guess++) {
                 for (let letter = 0; letter < 5; letter++) {
                     shareString += this.guesses[guess].letters[letter].shareSymbol
                 }
                 shareString += "\n"
             }
-            navigator.clipboard.writeText(`${shareString}The word was ||${this.word}||\nhttps://tessle.tessmakes.at/`)
+            if (this.includeWordSpoiler) {
+                shareString += `The word was ||${this.word}||\n`
+            }
+            navigator.clipboard.writeText(`${shareString}${window.location.href}`)
         }
     },
     mounted() {
@@ -164,6 +176,7 @@ export default {
     display: inline-flex;
     flex-direction: column;
     gap: 1em;
+    margin-top: 60px;
 }
 .hidden {
     display: none;
