@@ -1,5 +1,8 @@
 # tessle
 
+My personal reimplementation of Wordle.
+See: [https://tessle.tessmakes.at/](https://tessle.tessmakes.at/)
+
 ## Project setup
 ```
 yarn install
